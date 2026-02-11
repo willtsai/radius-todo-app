@@ -1,0 +1,23 @@
+name: App Graph Diff
+
+on:
+  pull_request:
+    paths:
+      - '**/.radius/app-graph.json'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: willtsai/radius/actions/app-graph-diff@001-git-app-graph-preview
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fail-on-stale: 'true'
