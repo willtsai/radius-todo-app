@@ -12,7 +12,7 @@
     }
   ],
   "metadata": {
-    "generatedAt": "2026-02-12T01:36:51.796951Z",
+    "generatedAt": "2026-02-12T01:40:35.490682Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
@@ -20,21 +20,6 @@
     "sourceHash": "sha256:b4bb6f83efa8e9ef12ea71c921ed3c10f1a3fc726b991c0aa99b0456d45e41d3"
   },
   "resources": [
-    {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/applications/radius-todo-app",
-      "name": "radius-todo-app",
-      "properties": {
-        "name": "radius-todo-app",
-        "properties": {
-          "environment": "[parameters('environment')]"
-        }
-      },
-      "sourceLocation": {
-        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 1
-      },
-      "type": "Applications.Core/applications"
-    },
     {
       "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
       "name": "demo",
@@ -68,7 +53,7 @@
       },
       "sourceLocation": {
         "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 2
+        "line": 1
       },
       "type": "Applications.Core/containers"
     },
@@ -84,7 +69,7 @@
       },
       "sourceLocation": {
         "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 3
+        "line": 2
       },
       "type": "Applications.Datastores/redisCaches"
     },
@@ -100,9 +85,24 @@
       },
       "sourceLocation": {
         "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 4
+        "line": 3
       },
       "type": "Applications.Datastores/sqlDatabases"
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/applications/radius-todo-app",
+      "name": "radius-todo-app",
+      "properties": {
+        "name": "radius-todo-app",
+        "properties": {
+          "environment": "[parameters('environment')]"
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 4
+      },
+      "type": "Applications.Core/applications"
     }
   ]
 }
