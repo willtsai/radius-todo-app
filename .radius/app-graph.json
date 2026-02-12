@@ -2,22 +2,22 @@
   "connections": [
     {
       "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
-      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/backend",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
       "type": "dependsOn"
     },
     {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/backend",
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
       "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
       "type": "dependsOn"
     }
   ],
   "metadata": {
-    "generatedAt": "2026-02-12T06:42:39.67066Z",
+    "generatedAt": "2026-02-12T06:44:43.981654Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
     ],
-    "sourceHash": "sha256:028d0274c0363e5281f8205835c5babb1a324a937d6972db942611d1a76e72fa"
+    "sourceHash": "sha256:8628bce52796e3c87915a2c4b579350cb6fc245df59e9d023367553dae567406"
   },
   "resources": [
     {
@@ -43,8 +43,8 @@
         "properties": {
           "application": "[reference('radiustodoapp').id]",
           "connections": {
-            "backend": {
-              "source": "[reference('backend').id]"
+            "demo": {
+              "source": "[reference('demo').id]"
             }
           },
           "container": {
@@ -64,10 +64,10 @@
       "type": "Applications.Core/containers"
     },
     {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/backend",
-      "name": "backend",
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "name": "demo",
       "properties": {
-        "name": "backend",
+        "name": "demo",
         "properties": {
           "application": "[reference('radiustodoapp').id]",
           "connections": {

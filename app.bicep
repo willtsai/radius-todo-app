@@ -24,15 +24,15 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
       }
     }
     connections: {
-      backend: {
-        source: backend.id
+      demo: {
+        source: demo.id
       }
     }
   }
 }
 
-resource backend 'Applications.Core/containers@2023-10-01-preview' = {
-  name: 'backend'
+resource demo 'Applications.Core/containers@2023-10-01-preview' = {
+  name: 'demo'
   properties: {
     application: radiustodoapp.id
     container: {
