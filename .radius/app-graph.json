@@ -2,22 +2,17 @@
   "connections": [
     {
       "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
-      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
-      "type": "dependsOn"
-    },
-    {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
       "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
       "type": "dependsOn"
     }
   ],
   "metadata": {
-    "generatedAt": "2026-02-12T02:09:54.86333Z",
+    "generatedAt": "2026-02-12T05:53:45.481968Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
     ],
-    "sourceHash": "sha256:b4bb6f83efa8e9ef12ea71c921ed3c10f1a3fc726b991c0aa99b0456d45e41d3"
+    "sourceHash": "sha256:349aa42d0d6f643c4aba6ed3cd529ca5d8dfba3520b12ebccaee9a3cee4ebdf9"
   },
   "resources": [
     {
@@ -43,9 +38,6 @@
         "properties": {
           "application": "[reference('radiustodoapp').id]",
           "connections": {
-            "redis": {
-              "source": "[reference('db').id]"
-            },
             "sql": {
               "source": "[reference('sqlDb').id]"
             }
@@ -73,22 +65,6 @@
       "type": "Applications.Core/containers"
     },
     {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
-      "name": "db",
-      "properties": {
-        "name": "db",
-        "properties": {
-          "application": "[reference('radiustodoapp').id]",
-          "environment": "[parameters('environment')]"
-        }
-      },
-      "sourceLocation": {
-        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 3
-      },
-      "type": "Applications.Datastores/redisCaches"
-    },
-    {
       "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
       "name": "sqlDb",
       "properties": {
@@ -100,7 +76,7 @@
       },
       "sourceLocation": {
         "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 4
+        "line": 3
       },
       "type": "Applications.Datastores/sqlDatabases"
     }
