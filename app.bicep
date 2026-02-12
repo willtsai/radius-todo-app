@@ -11,8 +11,28 @@ resource radiustodoapp 'Applications.Core/applications@2023-10-01-preview' = {
   }
 }
 
-resource demo 'Applications.Core/containers@2023-10-01-preview' = {
-  name: 'demo'
+resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
+  name: 'frontend'
+  properties: {
+    application: radiustodoapp.id
+    container: {
+      image: image
+      ports: {
+        web: {
+          containerPort: 3001
+        }
+      }
+    }
+    connections: {
+      backend: {
+        source: backend.id
+      }
+    }
+  }
+}
+
+resource backend 'Applications.Core/containers@2023-10-01-preview' = {
+  name: 'backend'
   properties: {
     application: radiustodoapp.id
     container: {

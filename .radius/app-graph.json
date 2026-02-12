@@ -1,18 +1,23 @@
 {
   "connections": [
     {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/backend",
+      "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/backend",
       "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
       "type": "dependsOn"
     }
   ],
   "metadata": {
-    "generatedAt": "2026-02-12T05:53:45.481968Z",
+    "generatedAt": "2026-02-12T06:42:39.67066Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
     ],
-    "sourceHash": "sha256:349aa42d0d6f643c4aba6ed3cd529ca5d8dfba3520b12ebccaee9a3cee4ebdf9"
+    "sourceHash": "sha256:028d0274c0363e5281f8205835c5babb1a324a937d6972db942611d1a76e72fa"
   },
   "resources": [
     {
@@ -31,10 +36,38 @@
       "type": "Applications.Core/applications"
     },
     {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
-      "name": "demo",
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "name": "frontend",
       "properties": {
-        "name": "demo",
+        "name": "frontend",
+        "properties": {
+          "application": "[reference('radiustodoapp').id]",
+          "connections": {
+            "backend": {
+              "source": "[reference('backend').id]"
+            }
+          },
+          "container": {
+            "image": "[parameters('image')]",
+            "ports": {
+              "web": {
+                "containerPort": 3001
+              }
+            }
+          }
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 2
+      },
+      "type": "Applications.Core/containers"
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/backend",
+      "name": "backend",
+      "properties": {
+        "name": "backend",
         "properties": {
           "application": "[reference('radiustodoapp').id]",
           "connections": {
@@ -60,7 +93,7 @@
       },
       "sourceLocation": {
         "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 2
+        "line": 3
       },
       "type": "Applications.Core/containers"
     },
@@ -76,7 +109,7 @@
       },
       "sourceLocation": {
         "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 3
+        "line": 4
       },
       "type": "Applications.Datastores/sqlDatabases"
     }
