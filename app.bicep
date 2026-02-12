@@ -1,14 +1,20 @@
 extension radius
 
-param application string
 param environment string
 
 param image string = 'ghcr.io/radius-project/samples/demo:latest'
 
+resource radiustodoapp 'Applications.Core/applications@2023-10-01-preview' = {
+  name: 'radius-todo-app'
+  properties: {
+    environment: environment
+  }
+}
+
 resource demo 'Applications.Core/containers@2023-10-01-preview' = {
   name: 'demo'
   properties: {
-    application: application
+    application: radiustodoapp.id
     container: {
       image: image
       ports: {
