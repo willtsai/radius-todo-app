@@ -6,35 +6,25 @@
       "type": "dependsOn"
     },
     {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Messaging/rabbitMQQueues/rabbitmq",
+      "type": "dependsOn"
+    },
+    {
       "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
       "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
       "type": "dependsOn"
     }
   ],
   "metadata": {
-    "generatedAt": "2026-02-12T06:44:43.981654Z",
+    "generatedAt": "2026-02-12T06:49:24.925007Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
     ],
-    "sourceHash": "sha256:8628bce52796e3c87915a2c4b579350cb6fc245df59e9d023367553dae567406"
+    "sourceHash": "sha256:4dba27939e5ee1ae0d96cbab9f7762f13cfbcad1e456f1d64d85323703a6db91"
   },
   "resources": [
-    {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/applications/radius-todo-app",
-      "name": "radius-todo-app",
-      "properties": {
-        "name": "radius-todo-app",
-        "properties": {
-          "environment": "[parameters('environment')]"
-        }
-      },
-      "sourceLocation": {
-        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 1
-      },
-      "type": "Applications.Core/applications"
-    },
     {
       "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
       "name": "frontend",
@@ -45,6 +35,9 @@
           "connections": {
             "demo": {
               "source": "[reference('demo').id]"
+            },
+            "rabbitmq": {
+              "source": "[reference('rabbitmq').id]"
             }
           },
           "container": {
@@ -59,9 +52,25 @@
       },
       "sourceLocation": {
         "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
-        "line": 2
+        "line": 1
       },
       "type": "Applications.Core/containers"
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Messaging/rabbitMQQueues/rabbitmq",
+      "name": "rabbitmq",
+      "properties": {
+        "name": "rabbitmq",
+        "properties": {
+          "application": "[reference('radiustodoapp').id]",
+          "environment": "[parameters('environment')]"
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 2
+      },
+      "type": "Applications.Messaging/rabbitMQQueues"
     },
     {
       "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
@@ -112,6 +121,21 @@
         "line": 4
       },
       "type": "Applications.Datastores/sqlDatabases"
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/applications/radius-todo-app",
+      "name": "radius-todo-app",
+      "properties": {
+        "name": "radius-todo-app",
+        "properties": {
+          "environment": "[parameters('environment')]"
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 5
+      },
+      "type": "Applications.Core/applications"
     }
   ]
 }

@@ -27,7 +27,18 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
       demo: {
         source: demo.id
       }
+      rabbitmq: {
+        source: rabbitmq.id
+      }
     }
+  }
+}
+
+resource rabbitmq 'Applications.Messaging/rabbitmqQueues@2023-10-01-preview' = {
+  name: 'rabbitmq'
+  properties: {
+    environment: environment
+    application: radiustodoapp.id
   }
 }
 
