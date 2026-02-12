@@ -1,12 +1,57 @@
 {
   "connections": null,
   "metadata": {
-    "generatedAt": "2026-02-12T00:18:31.027396Z",
+    "generatedAt": "2026-02-12T00:40:42.111696Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
     ],
     "sourceHash": "sha256:8956f016eae974174a6795613656a17dc5a983750cb7a8cff9ab12cf776b36ce"
   },
-  "resources": null
+  "resources": [
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/applications/radius-todo-app",
+      "name": "radius-todo-app",
+      "properties": {
+        "name": "radius-todo-app",
+        "properties": {
+          "environment": "[parameters('environment')]"
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 1
+      },
+      "type": "Applications.Core/applications"
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "name": "demo",
+      "properties": {
+        "name": "demo",
+        "properties": {
+          "application": "[reference('radiustodoapp').id]",
+          "container": {
+            "image": "[parameters('image')]",
+            "livenessProbe": {
+              "containerPort": 3000,
+              "initialDelaySeconds": 10,
+              "kind": "httpGet",
+              "path": "/healthz"
+            },
+            "ports": {
+              "web": {
+                "containerPort": 3000
+              }
+            }
+          }
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 2
+      },
+      "type": "Applications.Core/containers"
+    }
+  ]
 }
