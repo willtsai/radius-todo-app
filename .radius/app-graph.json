@@ -4,15 +4,20 @@
       "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
       "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
       "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
+      "type": "dependsOn"
     }
   ],
   "metadata": {
-    "generatedAt": "2026-02-12T01:24:39.930978Z",
+    "generatedAt": "2026-02-12T01:36:51.796951Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
     ],
-    "sourceHash": "sha256:1d5a0c53e126292a2f51f11779391de02803ff86b15f8d48521f39cb95263564"
+    "sourceHash": "sha256:b4bb6f83efa8e9ef12ea71c921ed3c10f1a3fc726b991c0aa99b0456d45e41d3"
   },
   "resources": [
     {
@@ -40,6 +45,9 @@
           "connections": {
             "redis": {
               "source": "[reference('db').id]"
+            },
+            "sql": {
+              "source": "[reference('sqlDb').id]"
             }
           },
           "container": {
@@ -79,6 +87,22 @@
         "line": 3
       },
       "type": "Applications.Datastores/redisCaches"
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
+      "name": "sqlDb",
+      "properties": {
+        "name": "sqlDb",
+        "properties": {
+          "application": "[reference('radiustodoapp').id]",
+          "environment": "[parameters('environment')]"
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 4
+      },
+      "type": "Applications.Datastores/sqlDatabases"
     }
   ]
 }

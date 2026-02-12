@@ -33,6 +33,9 @@ resource demo 'Applications.Core/containers@2023-10-01-preview' = {
       redis: {
         source: db.id
       }
+      sql: {
+        source: sqlDb.id
+      }
     }
   }
 }
@@ -42,5 +45,13 @@ resource db 'Applications.Datastores/redisCaches@2023-10-01-preview' = {
   properties: {
     application: radiustodoapp.id
     environment: environment
+  }
+}
+
+resource sqlDb 'Applications.Datastores/sqlDatabases@2023-10-01-preview' = {
+  name: 'sqlDb'
+  properties: {
+    environment: environment
+    application: radiustodoapp.id
   }
 }
