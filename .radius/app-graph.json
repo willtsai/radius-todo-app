@@ -1,13 +1,13 @@
 {
   "connections": [
     {
-      "sourceId": "demo",
-      "targetId": "db",
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
       "type": "dependsOn"
     }
   ],
   "metadata": {
-    "generatedAt": "2026-02-12T00:52:29.791952Z",
+    "generatedAt": "2026-02-12T01:24:39.930978Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
