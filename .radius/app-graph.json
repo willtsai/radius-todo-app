@@ -1,12 +1,18 @@
 {
-  "connections": null,
+  "connections": [
+    {
+      "sourceId": "demo",
+      "targetId": "db",
+      "type": "dependsOn"
+    }
+  ],
   "metadata": {
-    "generatedAt": "2026-02-12T00:40:42.111696Z",
+    "generatedAt": "2026-02-12T00:43:22.787107Z",
     "radiusCliVersion": "edge",
     "sourceFiles": [
       "/Users/witsai/repos/aocto/radius-todo-app/app.bicep"
     ],
-    "sourceHash": "sha256:8956f016eae974174a6795613656a17dc5a983750cb7a8cff9ab12cf776b36ce"
+    "sourceHash": "sha256:1d5a0c53e126292a2f51f11779391de02803ff86b15f8d48521f39cb95263564"
   },
   "resources": [
     {
@@ -31,6 +37,11 @@
         "name": "demo",
         "properties": {
           "application": "[reference('radiustodoapp').id]",
+          "connections": {
+            "redis": {
+              "source": "[reference('db').id]"
+            }
+          },
           "container": {
             "image": "[parameters('image')]",
             "livenessProbe": {
@@ -52,6 +63,22 @@
         "line": 2
       },
       "type": "Applications.Core/containers"
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
+      "name": "db",
+      "properties": {
+        "name": "db",
+        "properties": {
+          "application": "[reference('radiustodoapp').id]",
+          "environment": "[parameters('environment')]"
+        }
+      },
+      "sourceLocation": {
+        "file": "/Users/witsai/repos/aocto/radius-todo-app/app.bicep",
+        "line": 3
+      },
+      "type": "Applications.Datastores/redisCaches"
     }
   ]
 }

@@ -29,5 +29,18 @@ resource demo 'Applications.Core/containers@2023-10-01-preview' = {
         initialDelaySeconds: 10
       }
     }
+    connections: {
+      redis: {
+        source: db.id
+      }
+    }
+  }
+}
+
+resource db 'Applications.Datastores/redisCaches@2023-10-01-preview' = {
+  name: 'db'
+  properties: {
+    application: radiustodoapp.id
+    environment: environment
   }
 }
