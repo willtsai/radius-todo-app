@@ -11,37 +11,6 @@ resource radiustodoapp 'Applications.Core/applications@2023-10-01-preview' = {
   }
 }
 
-resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
-  name: 'frontend'
-  properties: {
-    application: radiustodoapp.id
-    container: {
-      image: image
-      ports: {
-        web: {
-          containerPort: 3001
-        }
-      }
-    }
-    connections: {
-      demo: {
-        source: demo.id
-      }
-      rabbitmq: {
-        source: rabbitmq.id
-      }
-    }
-  }
-}
-
-resource rabbitmq 'Applications.Messaging/rabbitmqQueues@2023-10-01-preview' = {
-  name: 'rabbitmq'
-  properties: {
-    environment: environment
-    application: radiustodoapp.id
-  }
-}
-
 resource demo 'Applications.Core/containers@2023-10-01-preview' = {
   name: 'demo'
   properties: {
