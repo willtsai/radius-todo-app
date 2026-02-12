@@ -44,3 +44,34 @@ resource sqlDb 'Applications.Datastores/sqlDatabases@2023-10-01-preview' = {
     application: radiustodoapp.id
   }
 }
+
+resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
+  name: 'frontend'
+  properties: {
+    application: radiustodoapp.id
+    container: {
+      image: image
+      ports: {
+        web: {
+          containerPort: 3001
+        }
+      }
+    }
+    connections: {
+      demo: {
+        source: demo.id
+      }
+      rabbitmq: {
+        source: rabbitmq.id
+      }
+    }
+  }
+}
+
+resource rabbitmq 'Applications.Messaging/rabbitmqQueues@2023-10-01-preview' = {
+  name: 'rabbitmq'
+  properties: {
+    environment: environment
+    application: radiustodoapp.id
+  }
+}
