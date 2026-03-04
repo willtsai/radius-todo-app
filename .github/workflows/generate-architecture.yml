@@ -1,0 +1,234 @@
+# ---------------------------------------------------------------
+# Architecture Diagram Generator
+# ---------------------------------------------------------------
+# Spins up a Kind cluster, installs Radius with custom images,
+# runs `rad app graph` to extract resources & connections from
+# app.bicep, generates a Mermaid diagram with GitHub styling,
+# and updates README.md with the interactive graph.
+#
+# Trigger: Merge to main or manual dispatch
+# Based on: workflow-spec.md
+# ---------------------------------------------------------------
+
+name: Generate Architecture Diagram
+
+on:
+  push:
+    branches: [main]
+    # Only run when files that affect the diagram change — skip
+    # automated README-only commits to prevent infinite loops.
+    paths:
+      - 'app.bicep'
+      - 'scripts/**'
+      - '.github/workflows/generate-architecture.yml'
+  workflow_dispatch:
+    inputs:
+      detailed:
+        description: 'Show image:tag metadata on graph nodes (detailed / image dependency mode)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  RADIUS_CONTAINER_REGISTRY: ghcr.io/nithyatsu
+  RADIUS_IMAGE_TAG: latest
+
+jobs:
+  generate-diagram:
+    runs-on: ubuntu-latest
+
+    steps:
+      # -------------------------------------------------------
+      # Step 0: Checkout latest main
+      # -------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # -------------------------------------------------------
+      # Step 1: Spin up a Kind cluster
+      # -------------------------------------------------------
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: kind-radius
+          wait: 120s
+
+      - name: Verify cluster is ready
+        run: kubectl cluster-info && kubectl get nodes
+
+      # -------------------------------------------------------
+      # Step 2: Pull custom images and load into Kind
+      # -------------------------------------------------------
+      - name: Pull custom Radius images
+        run: |
+          images=(
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/applications-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/dynamic-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/controller:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
+          )
+          for img in "${images[@]}"; do
+            echo "Pulling $img ..."
+            docker pull "$img" && echo "✅ $img pulled" || { echo "❌ Failed to pull $img"; exit 1; }
+          done
+
+      - name: Load images into Kind cluster
+        run: |
+          images=(
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/applications-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/dynamic-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/controller:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
+          )
+          for img in "${images[@]}"; do
+            echo "Loading $img into Kind ..."
+            kind load docker-image "$img" --name kind-radius
+          done
+
+      # -------------------------------------------------------
+      # Step 3: Build & install Radius CLI from custom fork
+      # -------------------------------------------------------
+      - name: Checkout Radius repo
+        uses: actions/checkout@v4
+        with:
+          repository: nithyatsu/radius
+          ref: prototype
+          path: radius-repo
+          submodules: true
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: radius-repo/go.mod
+          cache-dependency-path: radius-repo/go.sum
+
+      - name: Build rad CLI
+        run: |
+          cd radius-repo
+          make build-rad-linux-amd64
+          chmod +x ./dist/linux_amd64/release/rad
+          sudo cp ./dist/linux_amd64/release/rad /usr/local/bin/rad
+          rad version
+
+      - name: Install Radius with custom images
+        run: |
+          # Watch pods and capture logs from failing pods in the background
+          (while true; do
+            echo "--- $(date +%H:%M:%S) radius-system pods ---"
+            kubectl get pods -n radius-system 2>/dev/null || { echo "(namespace not yet created)"; sleep 10; continue; }
+            # Check for pods that are not Running/Succeeded and dump logs + events
+            for pod in $(kubectl get pods -n radius-system --no-headers 2>/dev/null | grep -vE 'Running|Completed' | awk '{print $1}'); do
+              echo "⚠️  Pod $pod is not running — fetching logs:"
+              kubectl logs "$pod" -n radius-system --all-containers --tail=20 2>&1 || true
+              echo "⚠️  Pod $pod events:"
+              kubectl describe pod "$pod" -n radius-system 2>/dev/null | grep -A 20 "^Events:" || true
+              echo "---"
+            done
+            sleep 10
+          done) &
+          WATCH_PID=$!
+
+          rad install kubernetes
+
+          # Stop the background watch
+          kill $WATCH_PID 2>/dev/null || true
+          echo "=== Final pod status ==="
+          kubectl get pods -n radius-system
+
+
+      - name: Configure Radius workspace and environment
+        run: |
+          rad workspace create kubernetes
+          rad group create kind-radius
+          rad group switch kind-radius
+          # Use default namespace for the environment
+          rad env create kind-radius --namespace default
+          rad env switch kind-radius
+
+      # -------------------------------------------------------
+      # Debug: Describe applications-rp pod
+      # -------------------------------------------------------
+      - name: Describe applications-rp pod
+        if: always()
+        run: |
+          echo "=== Radius pods ==="
+          kubectl get pods -n radius-system
+          echo ""
+          echo "=== Describe dynamic-rp ==="
+          kubectl describe pod -l app.kubernetes.io/name=dynamic-rp -n radius-system
+          echo ""
+          echo "=== dynamic-rp logs (current) ==="
+          kubectl logs -l app.kubernetes.io/name=dynamic-rp -n radius-system --all-containers --tail=100 2>&1 || true
+          echo ""
+          echo "=== dynamic-rp logs (previous crash) ==="
+          kubectl logs -l app.kubernetes.io/name=dynamic-rp -n radius-system --all-containers --previous --tail=100 2>&1 || true
+          echo ""
+          echo "=== Describe applications-rp ==="
+          kubectl describe pod -l app.kubernetes.io/name=applications-rp -n radius-system
+          echo ""
+          echo "=== applications-rp logs ==="
+          kubectl logs -l app.kubernetes.io/name=applications-rp -n radius-system --tail=50 || true
+
+      # -------------------------------------------------------
+      # Step 3: Verify file path & generate the application graph
+      # -------------------------------------------------------
+      - name: Verify app.bicep exists
+        run: |
+          echo "GITHUB_WORKSPACE = ${{ github.workspace }}"
+          echo "pwd = $(pwd)"
+          ls -la "${{ github.workspace }}/"
+          echo ""
+          echo "app.bicep location:"
+          find "${{ github.workspace }}" -name "app.bicep" -type f
+          test -f "${{ github.workspace }}/app.bicep" && echo "✅ app.bicep found" || echo "❌ app.bicep NOT found"
+
+      - name: Run rad app graph
+        run: |
+          # rad app graph now writes directly to .radius/app-graph.json
+          rad app graph "${{ github.workspace }}/app.bicep"
+          echo "--- .radius/app-graph.json ---"
+          cat "${{ github.workspace }}/.radius/app-graph.json"
+
+      # -------------------------------------------------------
+      # Steps 4-5: Build Mermaid graph & update README
+      # -------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate Mermaid diagram and update README
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          REPO_BRANCH: ${{ github.ref_name }}
+          RAD_GRAPH_OUTPUT: ${{ github.workspace }}/.radius/app-graph.json
+          DETAILED: ${{ inputs.detailed || 'false' }}
+          BICEP_FILE: ${{ github.workspace }}/app.bicep
+        run: python scripts/generate_architecture.py
+
+      # -------------------------------------------------------
+      # Step 7: Commit and push (only if changed)
+      # -------------------------------------------------------
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md .radius/app-graph.json
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No diagram changes — nothing to commit."
+          else
+            git commit -m "docs: update architecture diagram [automated]"
+            # Pull latest main (rebase) in case it advanced while we ran
+            git pull --rebase origin main
+            git push
+          fi
