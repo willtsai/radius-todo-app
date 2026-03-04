@@ -1,6 +1,6 @@
 extension radius
 
-param environment string
+param environment string = 'default'
 
 param image string = 'ghcr.io/radius-project/samples/demo:latest'
 

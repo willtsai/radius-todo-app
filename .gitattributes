@@ -1,0 +1,4 @@
+# Auto-resolve merge conflicts on app-graph.json by keeping "ours".
+# The generate-architecture workflow regenerates this file on main
+# after every merge, so the PR branch's version doesn't matter.
+.radius/app-graph.json merge=ours
