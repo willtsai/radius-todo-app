@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "generatedAt": "2026-03-04T19:10:06.638198084Z",
+    "radiusCliVersion": "ff86843",
+    "sourceFiles": [
+      "app.bicep"
+    ],
+    "sourceHash": "sha256:0a3bedac4cbfbab4dcd76176057d81e990573c9a2d73167735e73f908f3af07f",
+    "gitCommit": "5529833374fc9b1703cc77a6c52eb4cec7040354"
+  },
+  "resources": [
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/applications/radius-todo-app",
+      "name": "radius-todo-app",
+      "type": "Applications.Core/applications",
+      "sourceLocation": {
+        "file": "app.bicep",
+        "line": 7
+      },
+      "gitInfo": {
+        "commitSha": "3c799ada17c4949fd085e270d2eea9394b9a81de",
+        "commitShort": "3c799ad",
+        "author": "28876888+willtsai@users.noreply.github.com",
+        "date": "2026-02-12T00:19:43Z",
+        "message": "add initial app-graph.json"
+      },
+      "properties": {
+        "environment": "[parameters('environment')]"
+      }
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "name": "demo",
+      "type": "Applications.Core/containers",
+      "sourceLocation": {
+        "file": "app.bicep",
+        "line": 14
+      },
+      "gitInfo": {
+        "commitSha": "a87fbb2aff53082bb3b9ef969307b813c4479c0e",
+        "commitShort": "a87fbb2",
+        "author": "28876888+willtsai@users.noreply.github.com",
+        "date": "2026-02-11T23:24:50Z",
+        "message": "initial commit - copy files over from Radius samples"
+      },
+      "properties": {
+        "application": "[reference('radiustodoapp').id]",
+        "connections": {
+          "redis": {
+            "source": "[reference('db').id]"
+          }
+        },
+        "container": {
+          "image": "[parameters('image')]",
+          "livenessProbe": {
+            "containerPort": 3000,
+            "initialDelaySeconds": 10,
+            "kind": "httpGet",
+            "path": "/healthz"
+          },
+          "ports": {
+            "web": {
+              "containerPort": 3000
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
+      "name": "db",
+      "type": "Applications.Datastores/redisCaches",
+      "sourceLocation": {
+        "file": "app.bicep",
+        "line": 40
+      },
+      "gitInfo": {
+        "commitSha": "04708d3191117fa5c6e50a056308d442cf1c1ed9",
+        "commitShort": "04708d3",
+        "author": "28876888+willtsai@users.noreply.github.com",
+        "date": "2026-02-12T00:44:26Z",
+        "message": "add redis cache to app"
+      },
+      "properties": {
+        "application": "[reference('radiustodoapp').id]",
+        "environment": "[parameters('environment')]"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
+      "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "targetId": "[reference('db').id]",
+      "type": "connection"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "targetId": "radiustodoapp",
+      "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
+      "targetId": "radiustodoapp",
+      "type": "dependsOn"
+    }
+  ]
+}
