@@ -74,10 +74,16 @@ jobs:
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
           )
+          pids=()
           for img in "${images[@]}"; do
             echo "Pulling $img ..."
-            docker pull "$img" && echo "✅ $img pulled" || { echo "❌ Failed to pull $img"; exit 1; }
+            docker pull "$img" &
+            pids+=("$!")
           done
+          for pid in "${pids[@]}"; do
+            wait "$pid" || { echo "❌ A pull failed"; exit 1; }
+          done
+          echo "✅ All images pulled"
 
       - name: Load images into Kind cluster
         run: |
@@ -88,10 +94,16 @@ jobs:
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
           )
+          pids=()
           for img in "${images[@]}"; do
             echo "Loading $img into Kind ..."
-            kind load docker-image "$img" --name kind-radius
+            kind load docker-image "$img" --name kind-radius &
+            pids+=("$!")
           done
+          for pid in "${pids[@]}"; do
+            wait "$pid" || { echo "❌ A load failed"; exit 1; }
+          done
+          echo "✅ All images loaded"
 
       # -------------------------------------------------------
       # Step 3: Build & install Radius CLI from custom fork
@@ -118,30 +130,8 @@ jobs:
           sudo cp ./dist/linux_amd64/release/rad /usr/local/bin/rad
           rad version
 
-      - name: Install Radius with custom images
-        run: |
-          # Watch pods and capture logs from failing pods in the background
-          (while true; do
-            echo "--- $(date +%H:%M:%S) radius-system pods ---"
-            kubectl get pods -n radius-system 2>/dev/null || { echo "(namespace not yet created)"; sleep 10; continue; }
-            # Check for pods that are not Running/Succeeded and dump logs + events
-            for pod in $(kubectl get pods -n radius-system --no-headers 2>/dev/null | grep -vE 'Running|Completed' | awk '{print $1}'); do
-              echo "⚠️  Pod $pod is not running — fetching logs:"
-              kubectl logs "$pod" -n radius-system --all-containers --tail=20 2>&1 || true
-              echo "⚠️  Pod $pod events:"
-              kubectl describe pod "$pod" -n radius-system 2>/dev/null | grep -A 20 "^Events:" || true
-              echo "---"
-            done
-            sleep 10
-          done) &
-          WATCH_PID=$!
-
-          rad install kubernetes
-
-          # Stop the background watch
-          kill $WATCH_PID 2>/dev/null || true
-          echo "=== Final pod status ==="
-          kubectl get pods -n radius-system
+      - name: Install Radius
+        run: rad install kubernetes
 
 
       - name: Configure Radius workspace and environment
@@ -154,42 +144,8 @@ jobs:
           rad env switch kind-radius
 
       # -------------------------------------------------------
-      # Debug: Describe applications-rp pod
+      # Step 4: Generate the application graph
       # -------------------------------------------------------
-      - name: Describe applications-rp pod
-        if: always()
-        run: |
-          echo "=== Radius pods ==="
-          kubectl get pods -n radius-system
-          echo ""
-          echo "=== Describe dynamic-rp ==="
-          kubectl describe pod -l app.kubernetes.io/name=dynamic-rp -n radius-system
-          echo ""
-          echo "=== dynamic-rp logs (current) ==="
-          kubectl logs -l app.kubernetes.io/name=dynamic-rp -n radius-system --all-containers --tail=100 2>&1 || true
-          echo ""
-          echo "=== dynamic-rp logs (previous crash) ==="
-          kubectl logs -l app.kubernetes.io/name=dynamic-rp -n radius-system --all-containers --previous --tail=100 2>&1 || true
-          echo ""
-          echo "=== Describe applications-rp ==="
-          kubectl describe pod -l app.kubernetes.io/name=applications-rp -n radius-system
-          echo ""
-          echo "=== applications-rp logs ==="
-          kubectl logs -l app.kubernetes.io/name=applications-rp -n radius-system --tail=50 || true
-
-      # -------------------------------------------------------
-      # Step 3: Verify file path & generate the application graph
-      # -------------------------------------------------------
-      - name: Verify app.bicep exists
-        run: |
-          echo "GITHUB_WORKSPACE = ${{ github.workspace }}"
-          echo "pwd = $(pwd)"
-          ls -la "${{ github.workspace }}/"
-          echo ""
-          echo "app.bicep location:"
-          find "${{ github.workspace }}" -name "app.bicep" -type f
-          test -f "${{ github.workspace }}/app.bicep" && echo "✅ app.bicep found" || echo "❌ app.bicep NOT found"
-
       - name: Run rad app graph
         run: |
           # rad app graph now writes directly to .radius/app-graph.json
