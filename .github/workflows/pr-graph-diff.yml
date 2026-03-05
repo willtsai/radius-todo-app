@@ -64,10 +64,16 @@ jobs:
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
           )
+          pids=()
           for img in "${images[@]}"; do
             echo "Pulling $img ..."
-            docker pull "$img" && echo "✅ $img pulled" || { echo "❌ Failed to pull $img"; exit 1; }
+            docker pull "$img" &
+            pids+=("$!")
           done
+          for pid in "${pids[@]}"; do
+            wait "$pid" || { echo "❌ A pull failed"; exit 1; }
+          done
+          echo "✅ All images pulled"
 
       - name: Load images into Kind cluster
         run: |
@@ -78,10 +84,16 @@ jobs:
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
             "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
           )
+          pids=()
           for img in "${images[@]}"; do
             echo "Loading $img into Kind ..."
-            kind load docker-image "$img" --name kind-radius
+            kind load docker-image "$img" --name kind-radius &
+            pids+=("$!")
           done
+          for pid in "${pids[@]}"; do
+            wait "$pid" || { echo "❌ A load failed"; exit 1; }
+          done
+          echo "✅ All images loaded"
 
       # ─────────────────────────────────────────────────────────
       # Build & install Radius CLI
