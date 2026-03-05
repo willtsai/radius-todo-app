@@ -6,6 +6,7 @@ Visit https://radapp.io to try it out.
 
 ## Architecture
 
+
 > *Auto-generated from `app.bicep` — click any node to jump to its definition in the source.*
 
 ```mermaid
