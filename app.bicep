@@ -61,19 +61,17 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
       demo: {
         source: demo.id
       }
+      redisCache: {
+        source: redisCache.id
+      }
     }
   }
 }
 
-resource gateway 'Applications.Core/gateways@2023-10-01-preview' = {
-  name: 'gateway'
+resource redisCache 'Applications.Datastores/redisCaches@2023-10-01-preview' = {
+  name: 'redisCache'
   properties: {
     application: radiustodoapp.id
-    routes: [
-      {
-        path: '/'
-        destination: 'http://${frontend.name}:3001'
-      }
-    ]
+    environment: environment
   }
 }
