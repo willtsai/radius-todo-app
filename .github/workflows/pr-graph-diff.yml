@@ -1,0 +1,180 @@
+# ---------------------------------------------------------------
+# PR Graph Diff
+# ---------------------------------------------------------------
+# For every push to a PR targeting main:
+#   1. Spins up Kind + Radius (same infra as generate-architecture)
+#   2. Runs `rad app graph` on the PR branch's app.bicep → generates
+#      the "head" graph in .radius/app-graph.json
+#   3. Reads the "base" graph from main via `git show`
+#   4. Diffs the two and posts a NEW PR comment with side-by-side
+#      Mermaid diagrams, a color-coded diff graph, and change tables
+#
+# The PR branch never commits app-graph.json → no merge conflicts.
+#
+# Based on: workflow-spec.md — User Story 4
+# ---------------------------------------------------------------
+
+name: PR Graph Diff
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  RADIUS_CONTAINER_REGISTRY: ghcr.io/nithyatsu
+  RADIUS_IMAGE_TAG: latest
+
+jobs:
+  graph-diff:
+    runs-on: ubuntu-latest
+    steps:
+      # ─────────────────────────────────────────────────────────
+      # Checkout
+      # ─────────────────────────────────────────────────────────
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ─────────────────────────────────────────────────────────
+      # Kind cluster
+      # ─────────────────────────────────────────────────────────
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: kind-radius
+          wait: 120s
+
+      - name: Verify cluster is ready
+        run: kubectl cluster-info && kubectl get nodes
+
+      # ─────────────────────────────────────────────────────────
+      # Pull & load custom Radius images
+      # ─────────────────────────────────────────────────────────
+      - name: Pull custom Radius images
+        run: |
+          images=(
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/applications-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/dynamic-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/controller:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
+          )
+          pids=()
+          for img in "${images[@]}"; do
+            echo "Pulling $img ..."
+            docker pull "$img" &
+            pids+=("$!")
+          done
+          for pid in "${pids[@]}"; do
+            wait "$pid" || { echo "❌ A pull failed"; exit 1; }
+          done
+          echo "✅ All images pulled"
+
+      - name: Load images into Kind cluster
+        run: |
+          images=(
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/applications-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/dynamic-rp:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/controller:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/ucpd:${{ env.RADIUS_IMAGE_TAG }}"
+            "${{ env.RADIUS_CONTAINER_REGISTRY }}/bicep:${{ env.RADIUS_IMAGE_TAG }}"
+          )
+          pids=()
+          for img in "${images[@]}"; do
+            echo "Loading $img into Kind ..."
+            kind load docker-image "$img" --name kind-radius &
+            pids+=("$!")
+          done
+          for pid in "${pids[@]}"; do
+            wait "$pid" || { echo "❌ A load failed"; exit 1; }
+          done
+          echo "✅ All images loaded"
+
+      # ─────────────────────────────────────────────────────────
+      # Build & install Radius CLI
+      # ─────────────────────────────────────────────────────────
+      - name: Checkout Radius repo
+        uses: actions/checkout@v4
+        with:
+          repository: nithyatsu/radius
+          ref: prototype
+          path: radius-repo
+          submodules: true
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: radius-repo/go.mod
+          cache-dependency-path: radius-repo/go.sum
+
+      - name: Build rad CLI
+        run: |
+          cd radius-repo
+          make build-rad-linux-amd64
+          chmod +x ./dist/linux_amd64/release/rad
+          sudo cp ./dist/linux_amd64/release/rad /usr/local/bin/rad
+          rad version
+
+      - name: Install Radius
+        run: rad install kubernetes
+
+      - name: Configure Radius workspace and environment
+        run: |
+          rad workspace create kubernetes
+          rad group create kind-radius
+          rad group switch kind-radius
+          rad env create kind-radius --namespace default
+          rad env switch kind-radius
+
+      # ─────────────────────────────────────────────────────────
+      # Generate the HEAD graph from the PR branch's app.bicep
+      # ─────────────────────────────────────────────────────────
+      - name: Generate graph from PR bicep
+        run: |
+          # rad app graph writes to .radius/app-graph.json
+          rad app graph "${{ github.workspace }}/app.bicep"
+          echo "--- PR graph (head) ---"
+          cat "${{ github.workspace }}/.radius/app-graph.json"
+
+      # ─────────────────────────────────────────────────────────
+      # Read BASE graph from main, diff, and post comment
+      # ─────────────────────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate diff comment
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_GRAPH: ${{ github.workspace }}/.radius/app-graph.json
+          DIFF_OUTPUT: /tmp/graph-diff-comment.md
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          DETAILED: 'true'
+          BICEP_FILE: ${{ github.workspace }}/app.bicep
+        run: |
+          python scripts/graph_diff.py
+          echo "--- Comment body ---"
+          cat /tmp/graph-diff-comment.md
+
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/graph-diff-comment.md', 'utf8');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body,
+            });
+            console.log('Created new graph-diff comment');
