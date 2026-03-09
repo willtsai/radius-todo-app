@@ -34,7 +34,7 @@ resource demo 'Applications.Core/containers@2023-10-01-preview' = {
         source: sqlDb.id
       }
       rabbitmq: {
-        source: rabbitmq.id
+        source: rabbitmqQueue.id
       }
     }
   }
@@ -48,8 +48,8 @@ resource sqlDb 'Applications.Datastores/sqlDatabases@2023-10-01-preview' = {
   }
 }
 
-resource rabbitmq 'Applications.Messaging/rabbitmqQueues@2023-10-01-preview' = {
-  name: 'rabbitmq'
+resource rabbitmqQueue 'Applications.Messaging/rabbitmqQueues@2023-10-01-preview' = {
+  name: 'rabbitmqQueue'
   properties: {
     environment: environment
     application: radiustodoapp.id
