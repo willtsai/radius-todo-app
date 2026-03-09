@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "generatedAt": "2026-03-09T18:18:44.125404879Z",
+    "generatedAt": "2026-03-09T18:31:13.611288056Z",
     "radiusCliVersion": "ff86843",
     "sourceFiles": [
       "app.bicep"
     ],
-    "sourceHash": "sha256:846f3d7bc3bea35d834afdd15d523f4f5e431e22eb465aade65a4803cfa92681",
-    "gitCommit": "6e36c214fc6cd1de80bea8f3a95e8036469cd151"
+    "sourceHash": "sha256:0a3bedac4cbfbab4dcd76176057d81e990573c9a2d73167735e73f908f3af07f",
+    "gitCommit": "e734eff5619c0437f5759746d8f881f3febbcc7e"
   },
   "resources": [
     {
@@ -46,8 +46,8 @@
       "properties": {
         "application": "[reference('radiustodoapp').id]",
         "connections": {
-          "sql": {
-            "source": "[reference('sqlDb').id]"
+          "redis": {
+            "source": "[reference('db').id]"
           }
         },
         "container": {
@@ -67,74 +67,19 @@
       }
     },
     {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
-      "name": "frontend",
-      "type": "Applications.Core/containers",
-      "sourceLocation": {
-        "file": "app.bicep",
-        "line": 48
-      },
-      "gitInfo": {
-        "commitSha": "e07ac246e7e37323fa81e58483ad5eec6ca6e919",
-        "commitShort": "e07ac24",
-        "author": "28876888+willtsai@users.noreply.github.com",
-        "date": "2026-03-09T18:12:02Z",
-        "message": "add sql db and rabbitmq"
-      },
-      "properties": {
-        "application": "[reference('radiustodoapp').id]",
-        "connections": {
-          "demo": {
-            "source": "[reference('demo').id]"
-          },
-          "rabbitmq": {
-            "source": "[reference('rabbitmq').id]"
-          }
-        },
-        "container": {
-          "image": "[parameters('image')]",
-          "ports": {
-            "web": {
-              "containerPort": 3001
-            }
-          }
-        }
-      }
-    },
-    {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
-      "name": "sqlDb",
-      "type": "Applications.Datastores/sqlDatabases",
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
+      "name": "db",
+      "type": "Applications.Datastores/redisCaches",
       "sourceLocation": {
         "file": "app.bicep",
         "line": 40
       },
       "gitInfo": {
-        "commitSha": "e07ac246e7e37323fa81e58483ad5eec6ca6e919",
-        "commitShort": "e07ac24",
+        "commitSha": "e734eff5619c0437f5759746d8f881f3febbcc7e",
+        "commitShort": "e734eff",
         "author": "28876888+willtsai@users.noreply.github.com",
-        "date": "2026-03-09T18:12:02Z",
-        "message": "add sql db and rabbitmq"
-      },
-      "properties": {
-        "application": "[reference('radiustodoapp').id]",
-        "environment": "[parameters('environment')]"
-      }
-    },
-    {
-      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Messaging/rabbitMQQueues/rabbitmq",
-      "name": "rabbitmq",
-      "type": "Applications.Messaging/rabbitMQQueues",
-      "sourceLocation": {
-        "file": "app.bicep",
-        "line": 71
-      },
-      "gitInfo": {
-        "commitSha": "e07ac246e7e37323fa81e58483ad5eec6ca6e919",
-        "commitShort": "e07ac24",
-        "author": "28876888+willtsai@users.noreply.github.com",
-        "date": "2026-03-09T18:12:02Z",
-        "message": "add sql db and rabbitmq"
+        "date": "2026-03-09T18:28:41Z",
+        "message": "revert"
       },
       "properties": {
         "application": "[reference('radiustodoapp').id]",
@@ -145,12 +90,12 @@
   "connections": [
     {
       "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
-      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
       "type": "dependsOn"
     },
     {
       "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
-      "targetId": "[reference('sqlDb').id]",
+      "targetId": "[reference('db').id]",
       "type": "connection"
     },
     {
@@ -159,37 +104,7 @@
       "type": "dependsOn"
     },
     {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
-      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
-      "type": "dependsOn"
-    },
-    {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
-      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Messaging/rabbitMQQueues/rabbitmq",
-      "type": "dependsOn"
-    },
-    {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
-      "targetId": "[reference('demo').id]",
-      "type": "connection"
-    },
-    {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
-      "targetId": "[reference('rabbitmq').id]",
-      "type": "connection"
-    },
-    {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
-      "targetId": "radiustodoapp",
-      "type": "dependsOn"
-    },
-    {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
-      "targetId": "radiustodoapp",
-      "type": "dependsOn"
-    },
-    {
-      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Messaging/rabbitMQQueues/rabbitmq",
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/db",
       "targetId": "radiustodoapp",
       "type": "dependsOn"
     }
