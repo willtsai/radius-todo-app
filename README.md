@@ -7,6 +7,7 @@ Visit https://radapp.io to try it out.
 ## Architecture
 
 
+
 > *Auto-generated from `app.bicep` — click any node to jump to its definition in the source.*
 
 ```mermaid
@@ -16,10 +17,14 @@ graph LR
     classDef datastore fill:#ffffff,stroke:#d4a72c,stroke-width:1.5px,color:#1f2328,rx:6,ry:6
     classDef other fill:#ffffff,stroke:#d1d9e0,stroke-width:1.5px,color:#1f2328,rx:6,ry:6
     demo["<b>demo</b><br/>:3000"]:::container
-    db["<b>db</b>"]:::datastore
-    demo --> db
+    frontend["<b>frontend</b><br/>:3001"]:::container
+    sqlDb["<b>sqlDb</b>"]:::datastore
+    demo --> sqlDb
+    frontend --> demo
     click demo href "https://github.com/willtsai/radius-todo-app/blob/main/app.bicep#L14" "app.bicep:14" _blank
-    click db href "https://github.com/willtsai/radius-todo-app/blob/main/app.bicep#L40" "app.bicep:40" _blank
+    click frontend href "https://github.com/willtsai/radius-todo-app/blob/main/app.bicep#L48" "app.bicep:48" _blank
+    click sqlDb href "https://github.com/willtsai/radius-todo-app/blob/main/app.bicep#L40" "app.bicep:40" _blank
     linkStyle 0 stroke:#2da44e,stroke-width:1.5px
+    linkStyle 1 stroke:#2da44e,stroke-width:1.5px
 ```
 
