@@ -33,23 +33,12 @@ resource demo 'Applications.Core/containers@2023-10-01-preview' = {
       sql: {
         source: sqlDb.id
       }
-      rabbitmq: {
-        source: rabbitmqQueue.id
-      }
     }
   }
 }
 
 resource sqlDb 'Applications.Datastores/sqlDatabases@2023-10-01-preview' = {
   name: 'sqlDb'
-  properties: {
-    environment: environment
-    application: radiustodoapp.id
-  }
-}
-
-resource rabbitmqQueue 'Applications.Messaging/rabbitmqQueues@2023-10-01-preview' = {
-  name: 'rabbitmqQueue'
   properties: {
     environment: environment
     application: radiustodoapp.id
@@ -73,5 +62,18 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
         source: demo.id
       }
     }
+  }
+}
+
+resource gateway 'Applications.Core/gateways@2023-10-01-preview' = {
+  name: 'gateway'
+  properties: {
+    application: radiustodoapp.id
+    routes: [
+      {
+        path: '/'
+        destination: 'http://${frontend.name}:3001'
+      }
+    ]
   }
 }
