@@ -44,34 +44,3 @@ resource sqlDb 'Applications.Datastores/sqlDatabases@2023-10-01-preview' = {
     application: radiustodoapp.id
   }
 }
-
-resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
-  name: 'frontend'
-  properties: {
-    application: radiustodoapp.id
-    container: {
-      image: image
-      ports: {
-        web: {
-          containerPort: 3001
-        }
-      }
-    }
-    connections: {
-      demo: {
-        source: demo.id
-      }
-      redisCache: {
-        source: redisCache.id
-      }
-    }
-  }
-}
-
-resource redisCache 'Applications.Datastores/redisCaches@2023-10-01-preview' = {
-  name: 'redisCache'
-  properties: {
-    application: radiustodoapp.id
-    environment: environment
-  }
-}
