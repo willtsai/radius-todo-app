@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 type RedisClientType = ReturnType<typeof createClient>;
 
+// Factory for creating RedisRepository instances
 export class RedisFactory implements RedisFactory {
     constructor(connectionString: string) {
         this.connectionString = connectionString;
@@ -24,6 +25,7 @@ export class RedisFactory implements RedisFactory {
     }
 }
 
+// Repository implementation using Redis
 export class RedisRepository implements Repository {
     constructor(client: RedisClientType) {
         this.client = client;
