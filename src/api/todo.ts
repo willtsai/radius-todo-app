@@ -1,7 +1,6 @@
 import * as express from "express";
 import { Item, RepositoryFactory } from "../db/repository";
 
-// Some comment
 export const register = (app: express.Application, factory: RepositoryFactory) => {
     app.get(`/api/todos`, async (req, res) => {
         const respository = await factory.create()
