@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "generatedAt": "2026-03-30T23:21:40.103457956Z",
+    "generatedAt": "2026-04-03T04:27:17.495415049Z",
     "radiusCliVersion": "ff86843",
     "sourceFiles": [
       "app.bicep"
     ],
-    "sourceHash": "sha256:74be5a490fc0fd37e881fb6dec1603c09eb65e217d1bc7938441b99ca0057ce6",
-    "gitCommit": "5a422aab382536427159eb5f5c54d596e0620ee9"
+    "sourceHash": "sha256:1dd7b344b79a71a07dcb10b9e4251e01ce7e0469de8000b8e6a4b6bfb046afbf",
+    "gitCommit": "c74ee87ca61ca4b81a6af5ddd658dbb4c6f08e58"
   },
   "resources": [
     {
@@ -67,6 +67,61 @@
       }
     },
     {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "name": "frontend",
+      "type": "Applications.Core/containers",
+      "sourceLocation": {
+        "file": "app.bicep",
+        "line": 48
+      },
+      "gitInfo": {
+        "commitSha": "06ae0e4ecd98c7ce7f447cff75fa0e6b55b617cc",
+        "commitShort": "06ae0e4",
+        "author": "28876888+willtsai@users.noreply.github.com",
+        "date": "2026-03-09T19:10:25Z",
+        "message": "add sql db, frontend, redis"
+      },
+      "properties": {
+        "application": "[reference('radiustodoapp').id]",
+        "connections": {
+          "demo": {
+            "source": "[reference('demo').id]"
+          },
+          "redisCache": {
+            "source": "[reference('redisCache').id]"
+          }
+        },
+        "container": {
+          "image": "[parameters('image')]",
+          "ports": {
+            "web": {
+              "containerPort": 3001
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/redisCache",
+      "name": "redisCache",
+      "type": "Applications.Datastores/redisCaches",
+      "sourceLocation": {
+        "file": "app.bicep",
+        "line": 71
+      },
+      "gitInfo": {
+        "commitSha": "06ae0e4ecd98c7ce7f447cff75fa0e6b55b617cc",
+        "commitShort": "06ae0e4",
+        "author": "28876888+willtsai@users.noreply.github.com",
+        "date": "2026-03-09T19:10:25Z",
+        "message": "add sql db, frontend, redis"
+      },
+      "properties": {
+        "application": "[reference('radiustodoapp').id]",
+        "environment": "[parameters('environment')]"
+      }
+    },
+    {
       "id": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/sqlDatabases/sqlDb",
       "name": "sqlDb",
       "type": "Applications.Datastores/sqlDatabases",
@@ -100,6 +155,36 @@
     },
     {
       "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "targetId": "radiustodoapp",
+      "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/demo",
+      "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "targetId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/redisCache",
+      "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "targetId": "[reference('demo').id]",
+      "type": "connection"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "targetId": "[reference('redisCache').id]",
+      "type": "connection"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Core/containers/frontend",
+      "targetId": "radiustodoapp",
+      "type": "dependsOn"
+    },
+    {
+      "sourceId": "/planes/radius/local/resourceGroups/default/providers/Applications.Datastores/redisCaches/redisCache",
       "targetId": "radiustodoapp",
       "type": "dependsOn"
     },
